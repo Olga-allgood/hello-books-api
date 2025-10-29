@@ -1,12 +1,14 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from ..db import db
-
+# working with a data layer. It looks and is different from constructor 
 class Book(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     title: Mapped[str]
     description: Mapped[str]
+   
 
-
+# def add(x:int,y:int)->int:
+#     return x + y
 
 # class Book:
 #     def __init__(self, id, title, description):
