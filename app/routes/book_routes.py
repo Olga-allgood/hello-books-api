@@ -7,20 +7,29 @@ book_bp = Blueprint("book_bp", __name__, url_prefix="/books")
 @book_bp.post("")
 def create_book():
     request_body = request.get_json()
-    title = request_body["title"]
-    description = request_body["description"]
 
-    new_book = Book(title=title, description=description)
+    try:
+        new_book = Book.from_dict(request_body)
+    except KeyError as error:
+        response = {"message": f"Invalid request: missing {error.args[0]}"}  
+        abort(make_response(response, 400))  
+    # title = request_body["title"]
+    # description = request_body["description"]
+    # new_book = Book(title=title, description=description)
     db.session.add(new_book)
     db.session.commit()
 
-    response = {
-        "id": new_book.id,
-        "title": new_book.title,
-        "description": new_book.description,
-    }
+    return new_book.to_dict(), 201
 
-    return make_response(response, 201)
+    # response = {
+    #     "id": new_book.id,
+    #     "title": new_book.title,
+    #     "description": new_book.description,
+    # }
+
+    # return make_response(response, 201)
+
+
 @book_bp.get("")
 def get_all_books():
     query = db.select(Book).order_by(Book.id)
@@ -31,22 +40,24 @@ def get_all_books():
     # data base has models with attributes, but for flask we need 
     # JSON files, so we create dictionaries from the model objects
     for book in books:
-        books_response.append(
-            {
-            "id": book.id,
-            "title": book.title,
-            "description": book.description
-        })
+        books_response.append(book.to_dict())
+        # (
+        #     {
+        #     "id": book.id,
+        #     "title": book.title,
+        #     "description": book.description
+        # })
     return books_response
 
 @book_bp.get("/<book_id>")
 def get_single_book(book_id):
     book = validate_book(book_id)
-    return {
-        "id": book.id,
-        "title": book.title,
-        "description": book.description
-    }
+    return book.to_dict()
+    # return {
+    #     "id": book.id,
+    #     "title": book.title,
+    #     "description": book.description
+    # }
 @book_bp.put("/<book_id>")
 def update_book(book_id):
     book = validate_book(book_id)
