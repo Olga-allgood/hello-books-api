@@ -1,6 +1,9 @@
 from flask import Blueprint, Response, abort, make_response, request  # additional imports
 from app import db
 from app.models.book import Book
+from app import *
+from .route_utilities import validate_model
+from ..db import db
 
 book_bp = Blueprint("book_bp", __name__, url_prefix="/books")
 
@@ -51,7 +54,8 @@ def get_all_books():
 
 @book_bp.get("/<book_id>")
 def get_single_book(book_id):
-    book = validate_book(book_id)
+    # book = validate_book(book_id)
+    book = validate_model(Book, book_id)
     return book.to_dict()
     # return {
     #     "id": book.id,
@@ -60,7 +64,7 @@ def get_single_book(book_id):
     # }
 @book_bp.put("/<book_id>")
 def update_book(book_id):
-    book = validate_book(book_id)
+    book = validate_model(Book,book_id)
     request_body = request.get_json()
 
     book.title = request_body["title"]
@@ -69,22 +73,24 @@ def update_book(book_id):
 
     return Response(status=204, mimetype="application/json")
 # with empty body- status 204 - specify json for the system!
-def validate_book(book_id):
-    try:
-        book_id = int(book_id)
-    except ValueError:
-        invalid_input = {"message": f"Book id {book_id} invalid."}
-        abort(make_response(invalid_input, 400))
-    query = db.select(Book).where(Book.id == book_id)
-    book = db.session.scalar(query)
-    if not book: 
-        not_found_input = {"message": f"book {book_id} not found"}
-        abort(make_response(not_found_input, 404))  
-    return book          
+# def validate_model(cls, model_id)
+    
+# def validate_book(cls, book_id):
+#     try:
+#         book_id = int(book_id)
+#     except ValueError:
+#         invalid_input = {"message": f"Book id {book_id} invalid."}
+#         abort(make_response(invalid_input, 400))
+#     query = db.select(Book).where(Book.id == book_id)
+#     book = db.session.scalar(query)
+#     if not book: 
+#         not_found_input = {"message": f"book {book_id} not found"}
+#         abort(make_response(not_found_input, 404))  
+#     return book          
         
 @book_bp.delete("/<book_id>")
 def delete_book(book_id):
-    book = validate_book(book_id) 
+    book = validate_model(Book, book_id) 
     db.session.delete(book)     
     db.session.commit()
     return Response(status=204, mimetype="application/json")
